@@ -1,0 +1,33 @@
+import intf_libs += libcrails-renderer%lib{crails-renderer}
+import intf_libs += libdatatree%lib{datatree}
+
+lib{crails-paginator}: {hxx ixx txx cxx}{**} $impl_libs $intf_libs
+
+hxx{version}: in{version} $src_root/manifest
+
+hxx{export}@./: cxx.importable = false
+
+cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+{hbmia obja}{*}: cxx.poptions += -DLIBCRAILS_STATIC_BUILD
+{hbmis objs}{*}: cxx.poptions += -DLIBCRAILS_SHARED_BUILD
+
+lib{crails-paginator}:
+{
+  cxx.export.poptions = "-I$out_root/libcrails-paginator/" "-I$src_root/libcrails-paginator/"
+  cxx.export.libs = $intf_libs
+}
+
+liba{crails-paginator}: cxx.export.poptions += -DLIBCRAILS_STATIC
+libs{crails-paginator}: cxx.export.poptions += -DLIBCRAILS_SHARED
+
+if $version.pre_release
+  lib{crails-paginator}: bin.lib.version = "-$version.project_id"
+else
+  lib{crails-paginator}: bin.lib.version = "-$version.major.$version.minor"
+
+{hxx ixx txx}{*}:
+{
+  install         = include/
+  install.subdirs = true
+}

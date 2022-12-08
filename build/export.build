@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libcrails-paginator/
+}
+
+export $out_root/libcrails-paginator/$import.target
