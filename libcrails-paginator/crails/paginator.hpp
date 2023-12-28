@@ -25,6 +25,12 @@ namespace Crails
   public:
     typedef std::function<unsigned long()> CountCallback;
 
+    enum Options
+    {
+      NoOptions = 0,
+      UseDefaultOrderBy = 1
+    };
+
     Paginator(Data params) : params(params)
     {
     }
@@ -40,11 +46,13 @@ namespace Crails
 
 # ifdef WITH_ODB
     template<typename MODEL>
-    void decorate_query(odb::query<MODEL>& query) const
+    void decorate_query(odb::query<MODEL>& query, char options = UseDefaultOrderBy) const
     {
       if (enabled)
       {
-        query = MODEL::default_order_by(query)
+        if ((options & UseDefaultOrderBy) > 0)
+          query = MODEL::default_order_by(query);
+        query = query
           + "LIMIT"  + odb::query<MODEL>::_val(get_items_per_page())
           + "OFFSET" + odb::query<MODEL>::_val(get_current_offset());
       }
