@@ -7,12 +7,14 @@ unsigned int Paginator::get_items_per_page() const
 {
   unsigned int items_per_page = params["count"].defaults_to<unsigned short>(default_items_per_page);
 
+  if (items_per_page == 0) [[unlikely]]
+    return default_items_per_page;
   return std::min(items_per_page, max_items_per_page);
 }
 
 unsigned int Paginator::get_current_page() const
 {
-  return params["page"].defaults_to<unsigned short>(1);
+  return std::max<unsigned short>(1, params["page"].defaults_to<unsigned short>(1));
 }
 
 unsigned int Paginator::get_current_offset() const

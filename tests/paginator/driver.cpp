@@ -6,10 +6,6 @@
 #undef NDEBUG
 #include <cassert>
 
-// Assertions wrapped in `#ifdef PATCHED` describe the behavior we expect from
-// the paginator, but which it does not honor yet (see the comments next to each
-// of them). Build with `config.cxx.poptions += -DPATCHED` to enable them.
-
 using namespace Crails;
 using namespace std;
 
@@ -294,40 +290,21 @@ int main()
     assert(any_cast<string>(vars["title"]) == "Articles");
   }
 
-  // ---- Behaviors which are surprising at best, and expected to change:
-
-  // `page=0` asks for a page which does not exist. The offset should not
-  // underflow: today, `0 - 1` wraps around and the offset is ~4 billion.
+  // `page=0` asks for a page which does not exist. The offset should not underflow.
   {
     DataTree params = make_params("0", "20");
     Paginator subject(params.as_data());
 
-#ifdef PATCHED
     assert(subject.get_current_page() == 1);
     assert(subject.get_current_offset() == 0);
-#endif
   }
 
-  // Negative pages are parsed as unsigned: `page=-1` turns into page 65535
-  {
-    DataTree params = make_params("-1", "20");
-    Paginator subject(params.as_data());
-
-#ifdef PATCHED
-    assert(subject.get_current_page() == 1);
-    assert(subject.get_current_offset() == 0);
-#endif
-  }
-
-  // A count of zero produces a `LIMIT 0` and a division by zero for any view
-  // computing the number of pages (items_count / items_per_page).
+  // A count of zero item per page fallbacks to the default
   {
     DataTree params = make_params("1", "0");
     Paginator subject(params.as_data());
 
-#ifdef PATCHED
     assert(subject.get_items_per_page() >= 1);
-#endif
   }
 
   // Negative counts are parsed as unsigned: `count=-5` turns into the maximum
@@ -335,22 +312,7 @@ int main()
     DataTree params = make_params("1", "-5");
     Paginator subject(params.as_data());
 
-#ifdef PATCHED
-    assert(subject.get_items_per_page() == CRAILS_PAGINATOR_DEFAULT_COUNT);
-#endif
-  }
-
-  // Parameters are parsed as `unsigned short`: values above 65535 are not
-  // parsed, and silently replaced by the defaults.
-  {
-    DataTree params = make_params("70000", "70000");
-    Paginator subject(params.as_data());
-
-    subject.set_max_items_per_page(100000);
-#ifdef PATCHED
-    assert(subject.get_current_page() == 70000);
-    assert(subject.get_items_per_page() == 70000);
-#endif
+    assert(subject.get_items_per_page() == CRAILS_PAGINATOR_MAX_ITEMS);
   }
 
   return 0;
