@@ -1,0 +1,3 @@
+import libs += libcrails-paginator%lib{crails-paginator}
+
+exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}
